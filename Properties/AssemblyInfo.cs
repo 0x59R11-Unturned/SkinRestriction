@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SkinRestriction")]
-[assembly: AssemblyDescription("Skin Restrictions by Tortellio")]
+[assembly: AssemblyDescription("Skin Restrictions by Tortellio and nn653")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Tortellio")]
+[assembly: AssemblyCompany("Tortellio and nn653")]
 [assembly: AssemblyProduct("SkinRestriction")]
 [assembly: AssemblyCopyright("Copyright © 2019 Tortellio")]
 [assembly: AssemblyTrademark("Tortellio")]

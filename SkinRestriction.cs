@@ -3,7 +3,10 @@ using Rocket.Unturned.Permissions;
 using SDG.Unturned;
 using Steamworks;
 using System;
+using System.Linq;
+using System.Reflection;
 using Logger = Rocket.Core.Logging.Logger;
+using Random = System.Random;
 
 namespace Tortellio.SkinRestriction
 {
@@ -11,14 +14,19 @@ namespace Tortellio.SkinRestriction
     {
         public static SkinRestriction Instance;
         public static string PluginName = "SkinRestriction";
-        public static string PluginVersion = " 1.0.1";
+        public static string PluginVersion = " 1.1.0";
 
+
+        private Random _random = new Random();
+        private FieldInfo _skinField =
+            typeof(SteamPending).GetField("_skin", BindingFlags.Instance | BindingFlags.NonPublic);
+        
         protected override void Load()
         {
             Instance = this;
             Logger.Log("SkinRestriction has been loaded!");
             Logger.Log(PluginName + PluginVersion, ConsoleColor.Yellow);
-            Logger.Log("Made by Tortellio", ConsoleColor.Yellow);
+            Logger.Log("Made by Tortellio and fixed by nn653", ConsoleColor.Yellow);
             UnturnedPermissions.OnJoinRequested += new UnturnedPermissions.JoinRequested(OnPlayerConnect);
         }
 
@@ -26,62 +34,83 @@ namespace Tortellio.SkinRestriction
         {
             Instance = null;
             Logger.Log("SkinRestriction has been unloaded!");
-            Logger.Log("Visit Tortellio Discord for more! https://discord.gg/pzQwsew");
             UnturnedPermissions.OnJoinRequested -= new UnturnedPermissions.JoinRequested(OnPlayerConnect);
         }
 
         public void OnPlayerConnect(CSteamID Player, ref ESteamRejection? rejection)
         {
-            foreach (SteamPending Players in Provider.pending)
+            foreach (SteamPending sPlayer in Provider.pending)
             {
-                bool checkPlayer = Players.playerID.steamID == Player;
+                bool checkPlayer = sPlayer.playerID.steamID == Player;
                 if (checkPlayer)
                 {
-                    bool checkBypass = (Configuration.Instance.IgnoreAdmins && Players.assignedAdmin);
-                    if (checkBypass) { return; }
-
+                    bool checkBypass = Configuration.Instance.ExceptsPlayers
+                        .FirstOrDefault(p => string.Equals(p, sPlayer.playerID.steamID.ToString(), StringComparison.InvariantCulture)) != null;
+                    if (checkBypass)
+                    {
+                        return;
+                    }
+                    
                     #region SkinType
                     if (!Configuration.Instance.AllowItemSkin)
                     {
-                        Players.skinItems = new int[0];
-                        Players.packageSkins = new ulong[0];
+                        sPlayer.skinItems = Array.Empty<int>();
+                        sPlayer.packageSkins = Array.Empty<ulong>();
                     }
                     if (!Configuration.Instance.AllowHatSkin)
                     {
-                        Players.packageHat = 0UL;
-                        Players.hatItem = 0;
+                        sPlayer.packageHat = 0UL;
+                        sPlayer.hatItem = 0;
                     }
                     if (!Configuration.Instance.AllowMaskSkin)
                     {
-                        Players.maskItem = 0;
-                        Players.packageMask = 0UL;
+                        sPlayer.maskItem = 0;
+                        sPlayer.packageMask = 0UL;
                     }
                     if (!Configuration.Instance.AllowGlassesSkin)
                     {
-                        Players.packageGlasses = 0UL;
-                        Players.glassesItem = 0;
+                        sPlayer.packageGlasses = 0UL;
+                        sPlayer.glassesItem = 0;
                     }
                     if (!Configuration.Instance.AllowShirtSkin)
                     {
-                        Players.shirtItem = 0;
-                        Players.packageShirt = 0UL;
+                        sPlayer.shirtItem = 0;
+                        sPlayer.packageShirt = 0UL;
                     }
                     if (!Configuration.Instance.AllowVestSkin)
                     {
-                        Players.vestItem = 0;
-                        Players.packageVest = 0UL;
+                        sPlayer.vestItem = 0;
+                        sPlayer.packageVest = 0UL;
                     }
                     if (!Configuration.Instance.AllowBackpackSkin)
                     {
-                        Players.packageBackpack = 0UL;
-                        Players.backpackItem = 0;
+                        sPlayer.packageBackpack = 0UL;
+                        sPlayer.backpackItem = 0;
                     }
                     if (!Configuration.Instance.AllowPantsSkin)
                     {
-                        Players.pantsItem = 0;
-                        Players.packagePants = 0UL;
+                        sPlayer.pantsItem = 0;
+                        sPlayer.packagePants = 0UL;
                     }
                     #endregion
+
+                    
+                    var colors = Configuration.Instance.OverrideColors.Length;
+                    if (Configuration.Instance.OverrideSkinColor && colors > 0)
+                    {
+                        string newColorHex;
+                        if (colors == 1)
+                        {
+                            newColorHex = Configuration.Instance.OverrideColors[0];
+                        }
+                        else
+                        {
+                            newColorHex = Configuration.Instance.OverrideColors[_random.Next(colors)];
+                        }
+                        
+                        var newColor = Palette.hex(newColorHex);
+                        _skinField.SetValue(sPlayer, newColor);
+                    }
                 }
             }
         }

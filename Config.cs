@@ -1,10 +1,11 @@
-﻿using Rocket.API;
+﻿using System.Xml.Serialization;
+using Rocket.API;
+using UnityEngine;
 
 namespace Tortellio.SkinRestriction
 {
     public class Config : IRocketPluginConfiguration
     {
-        public bool IgnoreAdmins;
         public bool AllowItemSkin;
         public bool AllowHatSkin;
         public bool AllowMaskSkin;
@@ -13,9 +14,13 @@ namespace Tortellio.SkinRestriction
         public bool AllowShirtSkin;
         public bool AllowVestSkin;
         public bool AllowPantsSkin;
+
+        public bool OverrideSkinColor;
+        [XmlArrayItem("Item")] public string[] OverrideColors;
+        [XmlArrayItem("PlayerId")] public string[] ExceptsPlayers;
+        
         public void LoadDefaults()
         {
-            IgnoreAdmins = true;
             AllowItemSkin = false;
             AllowHatSkin = false;
             AllowMaskSkin = false;
@@ -24,6 +29,17 @@ namespace Tortellio.SkinRestriction
             AllowShirtSkin = false;
             AllowVestSkin = false;
             AllowPantsSkin = false;
+
+            OverrideSkinColor = true;
+            OverrideColors = new string[]
+            {
+                "#FF0000",
+            };
+
+            ExceptsPlayers = new string[]
+            {
+                "76561198122202652",
+            };
         }
     }
 }
